@@ -1,7 +1,7 @@
 import streamlit as st
 import psycopg2
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
 
 # Função para conectar ao banco de dados PostgreSQL
 def connect_db():
@@ -16,7 +16,7 @@ def connect_db():
 
 # Função para exibir o relatório
 def display_report():
-    st.title("Relatórios de Cadastro de Alunos")
+    st.title("📊 Relatórios de Cadastro de Alunos")
 
     conn = connect_db()
     cur = conn.cursor()
@@ -32,7 +32,12 @@ def display_report():
     unidades = cur.fetchall()
     df_unidades = pd.DataFrame(unidades, columns=["Unidade", "Total de Alunos"])
 
-    st.write(df_unidades)
+    st.subheader("📍 Alunos por Unidade")
+    fig_unidades = px.bar(df_unidades, x="Unidade", y="Total de Alunos", color="Unidade",
+                          title="Distribuição de Alunos por Unidade",
+                          labels={"Total de Alunos": "Quantidade"},
+                          text_auto=True)
+    st.plotly_chart(fig_unidades)
 
     # Consulta para distribuição de idades
     cur.execute("""
@@ -44,8 +49,12 @@ def display_report():
     idades = cur.fetchall()
     df_idades = pd.DataFrame(idades, columns=["Idade", "Total de Alunos"])
 
-    st.subheader('Distribuição de Idades')
-    st.bar_chart(df_idades.set_index('Idade')['Total de Alunos'])
+    st.subheader("🎂 Distribuição de Idades")
+    fig_idade = px.histogram(df_idades, x="Idade", y="Total de Alunos", nbins=20,
+                             title="Histograma de Idades dos Alunos",
+                             labels={"Total de Alunos": "Quantidade", "Idade": "Idade"},
+                             text_auto=True)
+    st.plotly_chart(fig_idade)
 
     # Consulta para distribuição por sexo
     cur.execute("""
@@ -56,8 +65,11 @@ def display_report():
     sexos = cur.fetchall()
     df_sexos = pd.DataFrame(sexos, columns=["Sexo", "Total de Alunos"])
 
-    st.subheader('Distribuição por Sexo')
-    st.bar_chart(df_sexos.set_index('Sexo')['Total de Alunos'])
+    st.subheader("🚻 Distribuição por Sexo")
+    fig_sexo = px.pie(df_sexos, values="Total de Alunos", names="Sexo",
+                      title="Distribuição de Alunos por Sexo",
+                      color_discrete_sequence=px.colors.sequential.RdBu)
+    st.plotly_chart(fig_sexo)
 
     cur.close()
     conn.close()
